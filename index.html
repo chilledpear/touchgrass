@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Ensure proper scaling on mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Touching Grass Simulator</title>
+  <style>
+    body {
+      background: #eef;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      overflow: hidden; /* Prevent unwanted scrollbars */
+    }
+    h1 {
+      color: #2d7a2d;
+      margin-bottom: 5px;
+    }
+    /* Small text for contract address */
+    .small-text {
+      font-size: 0.8em;
+      color: #666;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    /* Main grassy area */
+    #grassArea {
+      width: 80%;
+      max-width: 600px;
+      height: 400px;
+      margin: 20px auto;
+      background: url('grass.jpg') center/cover no-repeat;
+      border: 2px solid #4CAF50;
+      border-radius: 8px;
+      position: relative;
+      cursor: none; /* Hide default cursor */
+      overflow: hidden;
+    }
+    /* Score display: shows only the total number of clicks */
+    #score {
+      font-size: 1.5em;
+      color: #333;
+    }
+    /* Meter container */
+    #meterContainer {
+      width: 80%;
+      max-width: 600px;
+      height: 30px;
+      background: #ddd;
+      border: 2px solid #4CAF50;
+      border-radius: 15px;
+      margin: 20px auto;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Meter fill */
+    #meterFill {
+      height: 100%;
+      width: 0;
+      background: #4CAF50;
+      border-radius: 15px 0 0 15px;
+      transition: width 0.5s;
+    }
+    /* Prominent, bold inspirational message below the meter */
+    #rewardMessage {
+      margin-top: 10px;
+      font-size: 1.2em;
+      color: #2d7a2d;
+      font-weight: bold;
+    }
+    /* Custom cursor element – 64×64 pixels */
+    #customCursor {
+      width: 64px;
+      height: 64px;
+      position: absolute;
+      pointer-events: none;
+      background: url('hand.png') no-repeat center/contain;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+    /* Shake animation for level up */
+    @keyframes shake {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(-5px, 5px); }
+      40% { transform: translate(5px, -5px); }
+      60% { transform: translate(-5px, 5px); }
+      80% { transform: translate(5px, -5px); }
+      100% { transform: translate(0, 0); }
+    }
+    .shake {
+      animation: shake 0.5s;
+    }
+    /* Level up overlay message */
+    #levelUpMessage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3em;
+      color: #4CAF50;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      z-index: 2000;
+    }
+    .show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Touching Grass Simulator</h1>
+  <p class="small-text">contract address: coming soon</p>
+  
+  <!-- Main game area -->
+  <div id="grassArea"></div>
+  
+  <!-- Score display (click count only) -->
+  <p id="score">Clicks: 0</p>
+  
+  <!-- Power meter -->
+  <div id="meterContainer">
+    <div id="meterFill"></div>
+  </div>
+  
+  <!-- Inspirational & humorous messages below the meter -->
+  <div id="rewardMessage"></div>
+  
+  <!-- Custom cursor element (hidden on mobile) -->
+  <div id="customCursor"></div>
+  
+  <!-- Level up overlay message -->
+  <div id="levelUpMessage">Level Up!</div>
+  
+  <!-- Audio elements -->
+  <audio id="clickSound" src="click.mp3" preload="auto"></audio>
+  <audio id="bgMusic" src="music.mp3" preload="auto" loop></audio>
+  <audio id="levelupSound" src="levelup.mp3" preload="auto"></audio>
+  
+  <script>
+    // ---------------------------
+    // Game State Variables
+    // ---------------------------
+    let totalClicks = 0;
+    let currentLevelClicks = 0;
+    let currentLevel = 1;
+    let currentLevelThreshold = 10; // starting threshold: 10 clicks for level 1
+    const maxClicksToWin = 1000;
+    
+    // Combined messages: humorous and inspirational
+    const combinedMessages = [
+      "nature is healing",
+      "in another timeline you sold instead of taking a screenshot",
+      "mcdonalds isn't that bad when you really think about it",
+      "at least you still have your health",
+      "Nature is healing. Let the earth ground you.",
+      "Breathe in the fresh air and reconnect with your soul.",
+      "Embrace the calm of nature and the warmth of community.",
+      "Step outside, feel the earth, and let go of digital noise.",
+      "Find your center in the natural world around you.",
+      "The earth is calling; answer with a mindful touch.",
+      "Disconnect from the screen, reconnect with nature.",
+      "Let your spirit soar with the wind and roots of ancient trees.",
+      "In every blade of grass, there’s a story of renewal.",
+      "Rejuvenate your soul by connecting with the earth."
+    ];
+    let messageIndex = 0;
+    let messageLocked = false;
+    
+    // ---------------------------
+    // Get DOM Elements
+    // ---------------------------
+    const grassArea      = document.getElementById("grassArea");
+    const scoreDisplay   = document.getElementById("score");
+    const meterFill      = document.getElementById("meterFill");
+    const rewardMessage  = document.getElementById("rewardMessage");
+    const customCursor   = document.getElementById("customCursor");
+    const levelUpMessage = document.getElementById("levelUpMessage");
+    
+    const clickSound   = document.getElementById("clickSound");
+    const bgMusic      = document.getElementById("bgMusic");
+    const levelupSound = document.getElementById("levelupSound");
+    
+    // ---------------------------
+    // Mobile Detection & Setup
+    // ---------------------------
+    const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (isTouchDevice) {
+      customCursor.style.display = "none";
+    }
+    
+    // ---------------------------
+    // Update Score Display
+    // ---------------------------
+    function updateScoreDisplay() {
+      scoreDisplay.textContent = `Clicks: ${totalClicks}`;
+    }
+    
+    // ---------------------------
+    // Update Meter Fill
+    // ---------------------------
+    function updateMeter() {
+      let fillPercentage = (currentLevelClicks / currentLevelThreshold) * 100;
+      meterFill.style.width = fillPercentage + "%";
+    }
+    
+    // ---------------------------
+    // Show Next Message
+    // ---------------------------
+    function showNextMessage() {
+      rewardMessage.textContent = combinedMessages[messageIndex];
+      messageIndex = (messageIndex + 1) % combinedMessages.length;
+      messageLocked = true;
+      // Keep the message on screen for at least 3 seconds before updating
+      setTimeout(() => {
+        messageLocked = false;
+      }, 3000);
+    }
+    
+    // ---------------------------
+    // Level Up Event
+    // ---------------------------
+    function levelUp() {
+      // Add shake effect to the grass area
+      grassArea.classList.add("shake");
+      setTimeout(() => {
+        grassArea.classList.remove("shake");
+      }, 500);
+      
+      // Play level-up sound and show overlay message
+      levelupSound.currentTime = 0;
+      levelupSound.play().catch(err => console.log("Level up sound error:", err));
+      levelUpMessage.textContent = "Level Up!";
+      levelUpMessage.classList.add("show");
+      setTimeout(() => {
+        levelUpMessage.classList.remove("show");
+      }, 1500);
+      
+      // Reset progress for this level
+      currentLevelClicks = 0;
+      updateMeter();
+      
+      currentLevel++;
+      // Multiply the current threshold by 3 until reaching 1000 clicks
+      if (currentLevelThreshold * 3 >= maxClicksToWin) {
+        currentLevelThreshold = maxClicksToWin;
+      } else {
+        currentLevelThreshold *= 3;
+      }
+      
+      updateScoreDisplay();
+    }
+    
+    // ---------------------------
+    // Win Event
+    // ---------------------------
+    function winGame() {
+      levelUpMessage.textContent = "Congratulations! You win!";
+      levelUpMessage.classList.add("show");
+      // Remove event listener so no further interactions are processed
+      grassArea.removeEventListener(isTouchDevice ? "touchend" : "click", grassClickHandler);
+    }
+    
+    // ---------------------------
+    // Handle Grass Area Interaction
+    // ---------------------------
+    function grassClickHandler(e) {
+      // On first interaction, start background music if not already playing
+      if (bgMusic.paused) {
+        bgMusic.play().catch(err => console.log("Error playing background music:", err));
+      }
+      
+      totalClicks++;
+      currentLevelClicks++;
+      updateScoreDisplay();
+      updateMeter();
+      
+      clickSound.currentTime = 0;
+      clickSound.play().catch(err => console.log("Click sound error:", err));
+      
+      // Update the message below the meter if not locked
+      if (!messageLocked) {
+        showNextMessage();
+      }
+      
+      // Check if the current level's threshold is reached
+      if (currentLevelClicks >= currentLevelThreshold) {
+        if (currentLevelThreshold === maxClicksToWin) {
+          winGame();
+        } else {
+          levelUp();
+        }
+      }
+    }
+    
+    // ---------------------------
+    // Event Listeners for Interaction
+    // ---------------------------
+    if (isTouchDevice) {
+      // Use touch events on mobile
+      grassArea.addEventListener("touchend", function(e) {
+        e.preventDefault();
+        grassClickHandler(e);
+      });
+    } else {
+      // Use click events on non-touch devices
+      grassArea.addEventListener("click", grassClickHandler);
+      // Update custom cursor position on mouse movement
+      grassArea.addEventListener("mousemove", (e) => {
+        let x = e.clientX;
+        let y = e.clientY;
+        customCursor.style.left = x + "px";
+        customCursor.style.top  = y + "px";
+      });
+      grassArea.addEventListener("mouseleave", () => {
+        customCursor.style.display = "none";
+      });
+      grassArea.addEventListener("mouseenter", () => {
+        customCursor.style.display = "block";
+      });
+    }
+    
+    // ---------------------------
+    // Cycle Through Messages on a Timer
+    // ---------------------------
+    setInterval(() => {
+      if (!messageLocked) {
+        showNextMessage();
+      }
+    }, 5000);
+    
+    // Show an initial message on page load
+    showNextMessage();
+  </script>
+</body>
+</html>
