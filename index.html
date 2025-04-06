@@ -2,144 +2,284 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Ensure proper scaling on mobile -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Touch Grass Simulator</title>
   <style>
+    /* --- CSS Variables for Theming --- */
+    :root {
+      --grass-color-dark: #2d7a2d;
+      --grass-color-light: #4CAF50;
+      --sky-top: #87CEEB; /* Light Sky Blue */
+      --sky-bottom: #ADD8E6; /* Lighter Blue */
+      --earth-color: #8B4513; /* Saddle Brown */
+      --particle-color: rgba(255, 255, 255, 0.8); /* White sparkles */
+      --text-color: #333;
+      --level-up-color: gold;
+      --font-main: 'Arial', sans-serif; /* Placeholder: Use a nicer font */
+    }
+
     body {
-      background: #eef;
-      font-family: Arial, sans-serif;
+      /* Epic Sky Gradient Background */
+      background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+      font-family: var(--font-main);
       text-align: center;
       margin: 0;
       padding: 20px;
-      overflow: hidden; /* Prevent unwanted scrollbars */
+      overflow: hidden; /* Crucial to prevent scrollbars */
+      color: var(--text-color);
+      min-height: 100vh; /* Ensure background covers viewport */
+      position: relative; /* Needed for absolute positioning of effects */
     }
+
     h1 {
-      color: #2d7a2d;
+      color: var(--grass-color-dark);
       margin-bottom: 5px;
+      font-size: 2.5em; /* Bigger Title */
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+      /* Placeholder: Could be styled like a wooden sign */
     }
-    /* Small text for contract address */
+
     .small-text {
       font-size: 0.8em;
-      color: #666;
+      color: #555; /* Slightly darker */
       margin-top: 0;
       margin-bottom: 20px;
+      /* Placeholder: Could be etched onto a small rock graphic */
+      word-break: break-all; /* Prevent long address from breaking layout */
     }
-    /* Main grassy area */
+
+    /* --- The Living Meadow --- */
     #grassArea {
-      width: 80%;
-      max-width: 600px;
-      height: 400px;
+      width: 90%;
+      max-width: 700px; /* Slightly larger */
+      height: 450px; /* Taller */
       margin: 20px auto;
-      background: url('grass.jpg') center/cover no-repeat;
-      border: 2px solid #4CAF50;
-      border-radius: 8px;
+      /* Complex background for texture + subtle animation */
+      background:
+        /* Optional: Add subtle flower/pebble sprites here */
+        /* linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), */ /* Subtle grid */
+        /* linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px), */
+        url('grass_texture.png'), /* <<< REPLACE with a good seamless grass texture */
+        linear-gradient(to bottom, var(--grass-color-light), var(--grass-color-dark)); /* Base gradient */
+      background-size: auto, 100px 100px, auto; /* Adjust texture size */
+      border: 5px solid var(--earth-color); /* Earthy border */
+      border-radius: 15px; /* More rounded */
       position: relative;
       cursor: none; /* Hide default cursor */
-      overflow: hidden;
+      overflow: hidden; /* Keep particles inside */
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 0 15px rgba(0,0,0,0.2); /* More depth */
+
+      /* Subtle Sway Animation */
+      animation: subtleSway 15s infinite linear alternate;
     }
-    /* Score display: shows only the total number of clicks */
+
+    /* Basic sway effect - more complex requires JS/Canvas */
+    @keyframes subtleSway {
+      from { background-position: 0% 50%, 0% 0%, 0% 0%; }
+      to   { background-position: 5% 50%, 0% 0%, 0% 0%; } /* Shift texture slightly */
+    }
+
+
+    /* --- Click Interaction Feedback --- */
+    /* Simple ripple effect on click - more advanced needs JS canvas */
+    #grassArea::after {
+      content: '';
+      position: absolute;
+      top: var(--click-y, 50%); /* JS will set these */
+      left: var(--click-x, 50%);
+      width: 0px;
+      height: 0px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #grassArea.ripple::after {
+       animation: rippleEffect 0.5s ease-out;
+    }
+
+    @keyframes rippleEffect {
+      0% { width: 0px; height: 0px; opacity: 1; }
+      100% { width: 200px; height: 200px; opacity: 0; }
+    }
+
+    /* --- Particle Effect Container --- */
+    #particleContainer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; /* Don't interfere with clicks */
+        overflow: hidden; /* Keep particles contained */
+    }
+
+    /* Individual particle style */
+    .particle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: var(--particle-color);
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 1;
+        box-shadow: 0 0 5px var(--particle-color);
+        /* Animation will be handled by JS */
+    }
+
+
+    /* --- Score Display --- */
     #score {
-      font-size: 1.5em;
-      color: #333;
+      font-size: 1.8em; /* Larger score */
+      color: var(--grass-color-dark);
+      font-weight: bold;
+      margin-top: 15px;
+      /* Placeholder: Style like glowing text or etched stone */
+       text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
     }
-    /* Meter container */
+
+    /* --- Organic Meter --- */
     #meterContainer {
       width: 80%;
       max-width: 600px;
-      height: 30px;
-      background: #ddd;
-      border: 2px solid #4CAF50;
-      border-radius: 15px;
+      height: 35px; /* Taller meter */
+      background: #c5a17e; /* Lighter earth tone for container */
+      border: 3px solid var(--earth-color);
+      border-radius: 20px; /* Fully rounded ends */
       margin: 20px auto;
       overflow: hidden;
       position: relative;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+      /* Placeholder: Could use background-image for a log/vial effect */
     }
-    /* Meter fill */
+
     #meterFill {
       height: 100%;
-      width: 0;
-      background: #4CAF50;
-      border-radius: 15px 0 0 15px;
-      transition: width 0.5s;
+      width: 0; /* Starts empty */
+      /* Lush green gradient fill */
+      background: linear-gradient(to right, var(--grass-color-dark), var(--grass-color-light));
+      border-radius: 20px 0 0 20px; /* Match container rounding */
+      transition: width 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Smooth, bouncy transition */
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3); /* Inner shadow for depth */
     }
-    /* Prominent, bold inspirational message below the meter */
+
+    /* --- Reward Message Styling --- */
     #rewardMessage {
-      margin-top: 10px;
-      font-size: 1.2em;
-      color: #2d7a2d;
+      margin-top: 15px;
+      font-size: 1.3em;
+      color: var(--grass-color-dark);
       font-weight: bold;
+      min-height: 1.5em; /* Prevent layout shifts */
+      /* Placeholder: Style like parchment or a leaf */
+      padding: 5px 10px;
+      /* background: rgba(255, 255, 240, 0.7); */ /* Faint parchment look */
+      /* border-radius: 5px; */
+      /* border: 1px solid #ccc; */
+      display: inline-block; /* Fit content */
+      max-width: 90%; /* Prevent overly long messages breaking layout */
     }
-    /* Custom cursor element – 64×64 pixels */
+
+    /* --- Custom Cursor --- */
     #customCursor {
-      width: 64px;
-      height: 64px;
+      width: 50px; /* Slightly smaller */
+      height: 50px;
       position: absolute;
       pointer-events: none;
-      background: url('hand.png') no-repeat center/contain;
-      transform: translate(-50%, -50%);
+      background: url('hand_animated.png') no-repeat center/contain; /* <<< USE an animated hand or better graphic */
+      transform: translate(-40%, -40%); /* Adjust offset */
       z-index: 1000;
+      transition: transform 0.1s ease-out; /* Smoother follow */
+      /* Subtle Pulse Animation */
+      /* animation: pulseCursor 1.5s infinite ease-in-out; */ /* Optional: Can be distracting */
     }
-    /* Shake animation for level up */
-    @keyframes shake {
-      0% { transform: translate(0, 0); }
-      20% { transform: translate(-5px, 5px); }
-      40% { transform: translate(5px, -5px); }
-      60% { transform: translate(-5px, 5px); }
-      80% { transform: translate(5px, -5px); }
-      100% { transform: translate(0, 0); }
+
+    @keyframes pulseCursor {
+      0%, 100% { transform: translate(-40%, -40%) scale(1); }
+      50% { transform: translate(-40%, -40%) scale(1.1); }
     }
-    .shake {
-      animation: shake 0.5s;
-    }
-    /* Level up overlay message */
+
+    /* --- EPIC Level Up Effect --- */
     #levelUpMessage {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 3em;
-      color: #4CAF50;
-      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+      transform: translate(-50%, -150%) scale(0.5); /* Start off-screen and small */
+      font-size: 5em; /* HUGE text */
+      color: var(--level-up-color);
+      text-shadow: 0 0 10px var(--level-up-color), 0 0 20px var(--level-up-color), 3px 3px 5px rgba(0, 0, 0, 0.8);
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.5s ease-in-out;
+      transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.5s ease-out; /* Bounce in, fade out */
       z-index: 2000;
+      font-weight: bold;
     }
-    .show {
+
+    #levelUpMessage.show {
       opacity: 1;
+      transform: translate(-50%, -50%) scale(1); /* Center and full size */
     }
+
+    /* Screen Flash Effect */
+    body.flash {
+        animation: screenFlash 0.6s ease-out;
+    }
+
+    @keyframes screenFlash {
+        0% { background-color: rgba(255, 255, 180, 0); } /* Start transparent */
+        50% { background-color: rgba(255, 255, 180, 0.8); } /* Bright yellow flash */
+        100% { background-color: rgba(255, 255, 180, 0); } /* Fade out */
+    }
+
+    /* --- Shake Animation (Kept from original) --- */
+     @keyframes shake {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(-8px, 8px) rotate(-2deg); } /* Added rotation */
+      40% { transform: translate(8px, -8px) rotate(2deg); }
+      60% { transform: translate(-8px, 8px) rotate(-2deg); }
+      80% { transform: translate(8px, -8px) rotate(2deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+    .shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; /* Use a bouncier timing */
+    }
+
   </style>
 </head>
 <body>
   <h1>Touch Grass Simulator</h1>
-  <p class="small-text">contract address: 61zQw5bDVCg31XQLWp4TLW7jByRFKY7Gr34AAExqpump</p>
-  
+  <!-- Added the address back and made it dynamic -->
+  <p class="small-text">Contract: <span id="contractAddress">Loading...</span></p>
+
   <!-- Main game area -->
-  <div id="grassArea"></div>
-  
-  <!-- Score display (click count only) -->
+  <div id="grassArea">
+      <div id="particleContainer"></div> <!-- Container for particles -->
+  </div>
+
+  <!-- Score display -->
   <p id="score">Touches: 0</p>
-  
+
   <!-- Power meter -->
   <div id="meterContainer">
     <div id="meterFill"></div>
   </div>
-  
-  <!-- Inspirational & humorous messages below the meter -->
-  <div id="rewardMessage"></div>
-  
-  <!-- Custom cursor element (hidden on mobile) -->
+
+  <!-- Reward messages -->
+  <div id="rewardMessage">Let the grounding begin...</div>
+
+  <!-- Custom cursor element -->
   <div id="customCursor"></div>
-  
+
   <!-- Level up overlay message -->
-  <div id="levelUpMessage">Level Up!</div>
-  
-  <!-- Audio elements -->
-  <audio id="clickSound" src="click.mp3" preload="auto"></audio>
-  <audio id="bgMusic" src="music.mp3" preload="auto" loop></audio>
-  <audio id="levelupSound" src="levelup.mp3" preload="auto"></audio>
-  
+  <div id="levelUpMessage">LEVEL UP!</div>
+
+  <!-- Audio elements (USE BETTER SOUND FILES!) -->
+  <audio id="clickSound" src="click_satisfying.mp3" preload="auto"></audio> <!-- << Better click sound -->
+  <audio id="bgMusic" src="ambient_nature.mp3" preload="auto" loop></audio> <!-- << Ambient sounds -->
+  <audio id="levelupSound" src="levelup_epic.mp3" preload="auto"></audio> <!-- << More impactful level up -->
+  <audio id="winSound" src="win_fanfare.mp3" preload="auto"></audio> <!-- << Added Win Sound -->
+
   <script>
     // ---------------------------
     // Game State Variables
@@ -147,47 +287,98 @@
     let totalClicks = 0;
     let currentLevelClicks = 0;
     let currentLevel = 1;
-    let currentLevelThreshold = 10; // starting threshold: 10 clicks for level 1
-    const maxClicksToWin = 1000;
-    
-    // Combined messages: humorous and inspirational
+    let currentLevelThreshold = 15; // Slightly higher start
+    const levelThresholdMultiplier = 2.5; // Slower progression than x3
+    const maxClicksToWin = 5000; // Higher goal for epicness
+    const particlesPerClick = 5; // How many particles to spawn
+    const contractAddr = "61zQw5bDVCg31XQLWp4TLW7jByRFKY7Gr34AAExqpump"; // Store the address
+
+    // ---------------------------
+    // >> THE EXPANDED MESSAGE LIST <<
+    // ---------------------------
     const combinedMessages = [
+      // Original Crypto/Mundane Humor
       "in another timeline you sold instead of taking a screenshot",
       "nature is healing",
       "mcdonalds isn't that bad when you really think about it",
       "at least you still have your health",
-      "Nature is healing. Let the earth ground you.",
-      "Breathe in the fresh air and reconnect with your soul.",
-      "Embrace the calm of nature and the warmth of community.",
-      "Step outside, feel the earth, and let go of digital noise.",
       "losing money online? at least the fries at McDonald's are still crispy",
-      "Find your center in the natural world around you.",
-      "The earth is calling; answer with a mindful touch.",
-      "Disconnect from the screen, reconnect with nature.",
       "when crypto crashes, consider flipping burgers—at least McDonald's offers benefits",
-      "Let your spirit soar with the wind and roots of ancient trees.",
-      "In every blade of grass, there’s a story of renewal.",
       "at least when you flip burgers, the only numbers you worry about are the ones on your paycheck",
-      "Rejuvenate your soul by connecting with the earth.",
       "maybe it's time to step outside and let nature distract you from those plummeting coins",
+
+      // More Crypto Pain / Coping
+      "remember when you thought that memecoin was a sure thing? good times.",
+      "your portfolio is down, but your grass-touching score is UP!",
+      "each touch costs less gas than that failed transaction yesterday.",
+      "is this what 'HODLing' feels like?",
+      "maybe the real treasure was the grass we touched along the way.",
+      "less charting, more chlorophyll.",
+      "if only touching grass generated yield...",
+      "did you check the price? don't check the price. touch more grass.",
+      "buying the dip? more like touching the tips... of grass.",
+      "imagine explaining your NFT collection to a blade of grass.",
+      "this grass doesn't care about market sentiment.",
+      "liquidation? no, just... hydration. for the grass.",
+      "rug pull? nah, just pulling weeds. virtually.",
+      "at least this 'green' isn't bleeding.",
+      "thinking about that 100x leverage? maybe touch some more grass first.",
+
+      // Mundane / Fast Food Comparisons
+      "the grass is always greener... unless you're looking at your portfolio.",
+      "unlike your crypto wallet, this grass is consistently green.",
+      "if touching grass was a token, would you ape in?",
+      "cheaper than therapy, probably just as effective.",
+      "is this the 'outside' they keep talking about on Twitter?",
+      "McDonald's McFlurry machine is probably more reliable than some exchanges.",
+      "wonder if this grass accepts Dogecoin?",
+      "touching grass: the original proof-of-stake.",
+      "this doesn't require KYC.",
+      "zero slippage on these touches.",
+      "more satisfying than watching red candles.",
+      "the APR on grass touching is... existential.",
+      "can't get liquidated touching grass.",
+      "this requires less research than finding the next moonshot.",
+
+      // General 'Touch Grass' / Absurdity
+      "feel the simulated dew.",
+      "photosynthesis is happening. somewhere.",
+      "connect with the digital earth.",
+      "are you grounded yet?",
+      "breathe in the simulated fresh air.",
+      "listen closely, you can almost hear the blockchain... no wait, that's a bird.",
+      "careful, might get a virtual grass stain.",
+      "does this count towards my daily steps?",
+      "is this Decentraland?",
+      "the roots run deep... unlike some projects.",
+      "earthworms not included (yet).",
+      "this patch is fully audited. by nature.",
+      "lowering your screen time, one touch at a time.",
+      "a brief respite from the infinite scroll.",
+      "actual sunlight sold separately.",
     ];
     let messageIndex = 0;
     let messageLocked = false;
-    
+    let gameWon = false;
+
     // ---------------------------
     // Get DOM Elements
     // ---------------------------
+    const body           = document.body;
     const grassArea      = document.getElementById("grassArea");
+    const particleContainer = document.getElementById("particleContainer");
     const scoreDisplay   = document.getElementById("score");
     const meterFill      = document.getElementById("meterFill");
     const rewardMessage  = document.getElementById("rewardMessage");
     const customCursor   = document.getElementById("customCursor");
     const levelUpMessage = document.getElementById("levelUpMessage");
-    
+    const contractAddressSpan = document.getElementById("contractAddress"); // Get the span for the address
+
     const clickSound   = document.getElementById("clickSound");
     const bgMusic      = document.getElementById("bgMusic");
     const levelupSound = document.getElementById("levelupSound");
-    
+    const winSound     = document.getElementById("winSound");
+
     // ---------------------------
     // Mobile Detection & Setup
     // ---------------------------
@@ -195,149 +386,250 @@
     if (isTouchDevice) {
       customCursor.style.display = "none";
     }
-    
+
     // ---------------------------
     // Update Score Display
     // ---------------------------
     function updateScoreDisplay() {
-      scoreDisplay.textContent = `Clicks: ${totalClicks}`;
+      scoreDisplay.textContent = `Touches: ${totalClicks}`;
     }
-    
+
     // ---------------------------
     // Update Meter Fill
     // ---------------------------
     function updateMeter() {
-      let fillPercentage = (currentLevelClicks / currentLevelThreshold) * 100;
+      const threshold = currentLevelThreshold || 1;
+      let fillPercentage = Math.min((currentLevelClicks / threshold) * 100, 100);
       meterFill.style.width = fillPercentage + "%";
     }
-    
+
     // ---------------------------
     // Show Next Message
     // ---------------------------
     function showNextMessage() {
-      rewardMessage.textContent = combinedMessages[messageIndex];
+      if (messageLocked || gameWon) return;
+
+      // Ensure index wraps correctly with the large list
       messageIndex = (messageIndex + 1) % combinedMessages.length;
+      rewardMessage.textContent = combinedMessages[messageIndex];
       messageLocked = true;
-      // Keep the message on screen for at least 3 seconds before updating
+
       setTimeout(() => {
         messageLocked = false;
-      }, 3000);
+      }, 3000); // Adjusted lock time slightly
     }
-    
+
+    // ---------------------------
+    // Create Particle Effect
+    // ---------------------------
+    function createParticles(x, y) {
+        const rect = grassArea.getBoundingClientRect();
+        const relativeX = x - rect.left;
+        const relativeY = y - rect.top;
+
+        for (let i = 0; i < particlesPerClick; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            particleContainer.appendChild(particle);
+
+            const startX = relativeX;
+            const startY = relativeY;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 50 + 30;
+            const gravity = 0.5;
+            const life = Math.random() * 0.5 + 0.5;
+
+            let vx = Math.cos(angle) * speed / 10;
+            let vy = Math.sin(angle) * speed / 10 - 3;
+            let posX = startX;
+            let posY = startY;
+            let startTime = performance.now();
+
+            function animateParticle() {
+                const elapsed = (performance.now() - startTime) / 1000;
+                if (elapsed > life) {
+                    particle.remove();
+                    return;
+                }
+                vy += gravity;
+                posX += vx;
+                posY += vy;
+                particle.style.left = `${posX}px`;
+                particle.style.top = `${posY}px`;
+                particle.style.opacity = 1 - (elapsed / life);
+                requestAnimationFrame(animateParticle);
+            }
+            requestAnimationFrame(animateParticle);
+        }
+    }
+
+
     // ---------------------------
     // Level Up Event
     // ---------------------------
     function levelUp() {
-      // Add shake effect to the grass area
-      grassArea.classList.add("shake");
-      setTimeout(() => {
-        grassArea.classList.remove("shake");
-      }, 500);
-      
-      // Play level-up sound and show overlay message
+      body.classList.add('flash');
+      setTimeout(() => body.classList.remove('flash'), 600);
+
+      grassArea.classList.add('shake');
+      setTimeout(() => grassArea.classList.remove('shake'), 500);
+
       levelupSound.currentTime = 0;
       levelupSound.play().catch(err => console.log("Level up sound error:", err));
-      levelUpMessage.textContent = "Level Up!";
+
+      levelUpMessage.textContent = `Level ${currentLevel + 1}!`;
       levelUpMessage.classList.add("show");
       setTimeout(() => {
         levelUpMessage.classList.remove("show");
-      }, 1500);
-      
-      // Reset progress for this level
-      currentLevelClicks = 0;
-      updateMeter();
-      
+      }, 2000);
+
       currentLevel++;
-      // Multiply the current threshold by 3 until reaching 1000 clicks
-      if (currentLevelThreshold * 3 >= maxClicksToWin) {
-        currentLevelThreshold = maxClicksToWin;
-      } else {
-        currentLevelThreshold *= 3;
-      }
-      
+      currentLevelClicks = 0;
+      currentLevelThreshold = Math.min(Math.floor(currentLevelThreshold * levelThresholdMultiplier), maxClicksToWin);
+
+      updateMeter();
       updateScoreDisplay();
+
+       messageLocked = false;
+       // Randomize starting message index slightly after level up for variety
+       messageIndex = Math.floor(Math.random() * combinedMessages.length);
+       showNextMessage();
     }
-    
+
     // ---------------------------
     // Win Event
     // ---------------------------
     function winGame() {
-      levelUpMessage.textContent = "Congratulations! You win!";
-      levelUpMessage.classList.add("show");
-      // Remove event listener so no further interactions are processed
-      grassArea.removeEventListener(isTouchDevice ? "touchend" : "click", grassClickHandler);
+        if (gameWon) return;
+        gameWon = true;
+
+        body.classList.add('flash');
+        setTimeout(() => body.classList.remove('flash'), 1000);
+
+        winSound.currentTime = 0;
+        winSound.play().catch(err => console.log("Win sound error:", err));
+        if (!bgMusic.paused) {
+            // Fade out music instead of stopping abruptly
+            let vol = bgMusic.volume;
+            const fadeOutInterval = setInterval(() => {
+                vol -= 0.1;
+                if (vol <= 0) {
+                    bgMusic.pause();
+                    bgMusic.volume = 1; // Reset for next potential play
+                    clearInterval(fadeOutInterval);
+                } else {
+                    bgMusic.volume = vol;
+                }
+            }, 100);
+        }
+
+        levelUpMessage.style.fontSize = "3.5em";
+        levelUpMessage.style.color = "#FFD700";
+        levelUpMessage.textContent = "You Touched Enough Grass!";
+        levelUpMessage.classList.add("show");
+
+        rewardMessage.textContent = "True Zen Achieved. Go outside for real now?";
+
+        grassArea.removeEventListener(isTouchDevice ? "touchstart" : "mousedown", handleInteractionStart);
+        grassArea.removeEventListener(isTouchDevice ? "touchend" : "click", handleInteractionEnd);
+        grassArea.style.cursor = 'default';
+        if (!isTouchDevice) customCursor.style.display = 'none';
     }
-    
+
     // ---------------------------
-    // Handle Grass Area Interaction
+    // Handle Interaction Start
     // ---------------------------
-    function grassClickHandler(e) {
-      // On first interaction, start background music if not already playing
-      if (bgMusic.paused) {
-        bgMusic.play().catch(err => console.log("Error playing background music:", err));
-      }
-      
+    function handleInteractionStart(e) {
+       if (gameWon) return;
+
+       if (bgMusic.paused && bgMusic.readyState >= 3) {
+           bgMusic.play().catch(err => console.log("Error starting background music:", err));
+       }
+
+       const touch = isTouchDevice ? e.changedTouches[0] : e;
+       const rect = grassArea.getBoundingClientRect();
+       const x = touch.clientX - rect.left;
+       const y = touch.clientY - rect.top;
+
+       grassArea.style.setProperty('--click-x', `${x}px`);
+       grassArea.style.setProperty('--click-y', `${y}px`);
+       grassArea.classList.add('ripple');
+       setTimeout(() => {
+           grassArea.classList.remove('ripple');
+       }, 500);
+    }
+
+    // ---------------------------
+    // Handle Interaction End
+    // ---------------------------
+    function handleInteractionEnd(e) {
+      if (gameWon) return;
+      e.preventDefault();
+
       totalClicks++;
       currentLevelClicks++;
+
       updateScoreDisplay();
       updateMeter();
-      
+
       clickSound.currentTime = 0;
       clickSound.play().catch(err => console.log("Click sound error:", err));
-      
-      // Update the message below the meter if not locked
-      if (!messageLocked) {
-        showNextMessage();
+
+      const touch = isTouchDevice ? e.changedTouches[0] : e;
+      createParticles(touch.clientX, touch.clientY);
+
+      showNextMessage();
+
+      if (totalClicks >= maxClicksToWin) {
+           winGame();
       }
-      
-      // Check if the current level's threshold is reached
-      if (currentLevelClicks >= currentLevelThreshold) {
-        if (currentLevelThreshold === maxClicksToWin) {
-          winGame();
-        } else {
-          levelUp();
-        }
+      else if (currentLevelClicks >= currentLevelThreshold) {
+           levelUp();
       }
     }
-    
+
     // ---------------------------
-    // Event Listeners for Interaction
+    // Event Listeners
     // ---------------------------
-    if (isTouchDevice) {
-      // Use touch events on mobile
-      grassArea.addEventListener("touchend", function(e) {
-        e.preventDefault();
-        grassClickHandler(e);
-      });
-    } else {
-      // Use click events on non-touch devices
-      grassArea.addEventListener("click", grassClickHandler);
-      // Update custom cursor position on mouse movement
-      grassArea.addEventListener("mousemove", (e) => {
-        let x = e.clientX;
-        let y = e.clientY;
-        customCursor.style.left = x + "px";
-        customCursor.style.top  = y + "px";
-      });
-      grassArea.addEventListener("mouseleave", () => {
-        customCursor.style.display = "none";
-      });
-      grassArea.addEventListener("mouseenter", () => {
-        customCursor.style.display = "block";
-      });
+    grassArea.addEventListener(isTouchDevice ? "touchstart" : "mousedown", handleInteractionStart, { passive: false });
+    grassArea.addEventListener(isTouchDevice ? "touchend" : "click", handleInteractionEnd);
+
+
+    if (!isTouchDevice) {
+        grassArea.addEventListener("mousemove", (e) => {
+            if (gameWon) return;
+            customCursor.style.left = e.clientX + "px";
+            customCursor.style.top  = e.clientY + "px";
+        });
+        grassArea.addEventListener("mouseleave", () => {
+            if (gameWon) return;
+            customCursor.style.display = "none";
+        });
+        grassArea.addEventListener("mouseenter", () => {
+            if (gameWon) return;
+            customCursor.style.display = "block";
+        });
     }
-    
+
     // ---------------------------
-    // Cycle Through Messages on a Timer
+    // Auto-Cycle Messages
     // ---------------------------
     setInterval(() => {
-      if (!messageLocked) {
+      if (!messageLocked && !gameWon) {
         showNextMessage();
       }
-    }, 5000);
-    
-    // Show an initial message on page load
-    showNextMessage();
+    }, 5500); // Slightly adjusted interval
+
+    // ---------------------------
+    // Initial Setup
+    // ---------------------------
+    contractAddressSpan.textContent = contractAddr; // Set the contract address dynamically
+    updateScoreDisplay();
+    updateMeter();
+    // Randomize initial message index
+    messageIndex = Math.floor(Math.random() * combinedMessages.length);
+    setTimeout(showNextMessage, 500);
+
   </script>
 </body>
 </html>
