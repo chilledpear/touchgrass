@@ -3,791 +3,584 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Touch Grass Simulator</title>
+  <title>Stick Making Simulator</title>
   <style>
     /* --- CSS Variables for Theming --- */
     :root {
-      --grass-color-dark: #2d7a2d;
-      --grass-color-light: #4CAF50;
-      --sky-top: #87CEEB; /* Light Sky Blue */
-      --sky-bottom: #ADD8E6; /* Lighter Blue */
-      --earth-color: #8B4513; /* Saddle Brown */
-      --particle-color: rgba(255, 255, 255, 0.8); /* White sparkles */
+      --wood-color-dark: #5D4037;
+      --wood-color-light: #795548;
+      --tool-color: #78909C;
+      --leaf-color-light: #6AA84F;
+      --leaf-color-dark: #38761D;
+      --sky-top: #87CEEB;
+      --sky-bottom: #ADD8E6;
+      --earth-color: #8B4513;
+      --particle-color: rgba(160, 82, 45, 0.9);
       --text-color: #333;
       --level-up-color: gold;
-      --font-main: 'Arial', sans-serif; /* Placeholder: Use a nicer font */
-      --shop-bg: rgba(245, 245, 220, 0.85); /* Beige, slightly transparent */
-      --shop-border: #a0522d; /* Sienna */
-      --button-bg: var(--grass-color-light);
-      --button-hover-bg: var(--grass-color-dark);
+      --font-main: 'Arial', sans-serif;
+      --shop-bg: rgba(210, 180, 140, 0.9);
+      --shop-border: var(--wood-color-dark);
+      --button-bg: var(--leaf-color-light);
+      --button-hover-bg: var(--leaf-color-dark);
       --button-text: white;
       --button-disabled-bg: #aaa;
     }
 
     body {
-      /* Epic Sky Gradient Background */
       background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
       font-family: var(--font-main);
       text-align: center;
       margin: 0;
-      /* Add padding to the right to prevent shop overlap on narrow screens */
-      padding: 20px 200px 20px 20px; /* Adjusted right padding slightly */
-      overflow: hidden; /* Crucial to prevent scrollbars */
+      padding: 20px 200px 20px 20px;
+      overflow-x: hidden;
+      overflow-y: auto;
       color: var(--text-color);
-      min-height: 100vh; /* Ensure background covers viewport */
-      position: relative; /* Needed for absolute positioning of effects */
+      min-height: 100vh;
+      position: relative;
     }
 
     h1 {
-      color: var(--grass-color-dark);
+      color: var(--wood-color-dark);
       margin-bottom: 5px;
-      font-size: 2.5em; /* Bigger Title */
+      font-size: 2.5em;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
 
     .small-text {
       font-size: 0.8em;
-      color: #555; /* Slightly darker */
+      color: #555;
       margin-top: 0;
       margin-bottom: 20px;
-      word-break: break-all; /* Prevent long address from breaking layout */
+      word-break: break-all;
     }
 
-    /* --- Main Game Area Wrapper (to help with layout) --- */
     #gameContent {
-        display: inline-block; /* Allows centering via text-align on body */
-        max-width: 750px; /* Ensure it doesn't get too wide */
+        display: inline-block;
+        max-width: 750px;
         width: 100%;
         text-align: center;
     }
 
-    /* --- The Living Meadow --- */
-    #grassArea {
+    #logArea {
       width: 90%;
-      max-width: 700px;
-      height: 450px;
+      max-width: 600px;
+      height: 400px;
       margin: 20px auto;
-      background:
-        url('grass_texture.png'), /* <<< REPLACE with a good seamless grass texture */
-        linear-gradient(to bottom, var(--grass-color-light), var(--grass-color-dark));
-      background-size: auto, 100px 100px, auto;
-      border: 5px solid var(--earth-color);
+      background: transparent;
       border-radius: 15px;
       position: relative;
-      cursor: none; /* Hide default cursor */
+      cursor: url('axe.png') 10 30, auto; /* AXE CURSOR - Adjust 10 30 hotspot */
       overflow: hidden;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 0 15px rgba(0,0,0,0.2);
-      animation: subtleSway 15s infinite linear alternate;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    /* Basic sway effect */
-    @keyframes subtleSway {
-      from { background-position: 0% 50%, 0% 0%, 0% 0%; }
-      to   { background-position: 5% 50%, 0% 0%, 0% 0%; }
+    #logImage {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      filter: drop-shadow(0px 0px 3px var(--wood-color-dark))
+              drop-shadow(0px 0px 8px rgba(0,0,0,0.3)); /* FORM-FITTING BORDER */
     }
 
-    /* --- Click Interaction Feedback --- */
-    #grassArea::after {
+    #logArea::after {
       content: '';
       position: absolute;
       top: var(--click-y, 50%);
       left: var(--click-x, 50%);
       width: 0px;
       height: 0px;
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 50%;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%) scale(0.5);
       opacity: 0;
       pointer-events: none;
     }
-    #grassArea.ripple::after {
-       animation: rippleEffect 0.5s ease-out;
+    #logArea.ripple::after {
+       animation: rippleEffect 0.3s ease-out;
     }
     @keyframes rippleEffect {
-      0% { width: 0px; height: 0px; opacity: 1; }
-      100% { width: 200px; height: 200px; opacity: 0; }
+      0% { width: 0px; height: 0px; opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+      100% { width: 150px; height: 150px; opacity: 0; transform: translate(-50%, -50%) scale(1);}
     }
 
-    /* --- Particle Effect Container --- */
     #particleContainer {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; overflow: hidden;
     }
     .particle {
-        position: absolute; width: 8px; height: 8px;
-        background: var(--particle-color); border-radius: 50%;
-        pointer-events: none; opacity: 1; box-shadow: 0 0 5px var(--particle-color);
+        position: absolute; width: 6px; height: 10px;
+        background: var(--particle-color);
+        border-radius: 2px;
+        pointer-events: none; opacity: 1;
+        box-shadow: 0 0 3px var(--particle-color);
+    }
+    .accumulatedStick {
+        position: absolute;
+        width: 60px;  /* EXAMPLE: 1x width of your sticks.png */
+        height: 15px; /* EXAMPLE: 1x height of your sticks.png */
+        object-fit: contain;
+        pointer-events: none;
+        transform-origin: center bottom;
+        will-change: transform, opacity;
     }
 
-    /* --- Score Display --- */
     #score {
-      font-size: 1.8em; color: var(--grass-color-dark);
+      font-size: 1.8em; color: var(--wood-color-dark);
       font-weight: bold; margin-top: 15px;
        text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
     }
-
-    /* --- Organic Meter --- */
     #meterContainer {
       width: 80%; max-width: 600px; height: 35px;
-      background: #c5a17e; border: 3px solid var(--earth-color);
+      background: var(--tool-color);
+      border: 3px solid var(--wood-color-dark);
       border-radius: 20px; margin: 20px auto;
       overflow: hidden; position: relative;
       box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
     #meterFill {
       height: 100%; width: 0;
-      background: linear-gradient(to right, var(--grass-color-dark), var(--grass-color-light));
+      background: linear-gradient(to right, var(--wood-color-light), var(--wood-color-dark));
       border-radius: 20px 0 0 20px;
       transition: width 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
       box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3);
     }
-
-    /* --- Reward Message Styling --- */
     #rewardMessage {
-      margin-top: 15px; font-size: 1.3em; color: var(--grass-color-dark);
+      margin-top: 15px; font-size: 1.3em; color: var(--wood-color-dark);
       font-weight: bold; min-height: 1.5em;
       display: inline-block; max-width: 90%;
     }
 
-    /* --- Custom Cursor --- */
-    #customCursor {
-      width: 50px; height: 50px; position: absolute;
-      pointer-events: none; background: url('hand_animated.png') no-repeat center/contain;
-      transform: translate(-40%, -40%); z-index: 1000;
-      transition: transform 0.1s ease-out;
-    }
-
-    /* --- EPIC Level Up Effect --- */
     #levelUpMessage {
       position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%, -150%) scale(0.5);
-      font-size: 5em; color: var(--level-up-color);
+      transform: translate(-50%, -150%) scale(0.5); font-size: 4.5em; color: var(--level-up-color);
       text-shadow: 0 0 10px var(--level-up-color), 0 0 20px var(--level-up-color), 3px 3px 5px rgba(0, 0, 0, 0.8);
       pointer-events: none; opacity: 0;
       transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.5s ease-out;
       z-index: 2000; font-weight: bold;
     }
     #levelUpMessage.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-
-    /* Screen Flash Effect */
     body.flash { animation: screenFlash 0.6s ease-out; }
     @keyframes screenFlash {
-        0% { background-color: rgba(255, 255, 180, 0); }
-        50% { background-color: rgba(255, 255, 180, 0.8); }
-        100% { background-color: rgba(255, 255, 180, 0); }
+        0% { background-color: rgba(255, 235, 150, 0); }
+        50% { background-color: rgba(255, 235, 150, 0.8); }
+        100% { background-color: rgba(255, 235, 150, 0); }
     }
-
-    /* --- Shake Animation --- */
      @keyframes shake {
-      0% { transform: translate(0, 0); }
-      20% { transform: translate(-8px, 8px) rotate(-2deg); }
-      40% { transform: translate(8px, -8px) rotate(2deg); }
-      60% { transform: translate(-8px, 8px) rotate(-2deg); }
-      80% { transform: translate(8px, -8px) rotate(2deg); }
+      0% { transform: translate(0, 0) rotate(0deg); } 15% { transform: translate(-5px, 2px) rotate(-1deg); }
+      30% { transform: translate(5px, -2px) rotate(1deg); } 45% { transform: translate(-3px, 3px) rotate(-0.5deg); }
+      60% { transform: translate(3px, -3px) rotate(0.5deg); } 75% { transform: translate(-2px, 1px) rotate(-0.2deg); }
       100% { transform: translate(0, 0) rotate(0deg); }
     }
-    .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+    .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
-    /* --- Shop Styling --- */
     #shopContainer {
-        position: fixed; /* Stick to the viewport */
-        top: 50%; /* Center vertically */
-        right: 15px; /* Position on the right */
-        transform: translateY(-50%); /* Precise vertical centering */
-        width: 180px; /* Fixed width */
+        position: fixed;
+        top: 50%;
+        right: 15px;
+        transform: translateY(-50%);
+        width: 190px;
         background-color: var(--shop-bg);
         border: 3px solid var(--shop-border);
         border-radius: 10px;
         padding: 15px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        z-index: 100; /* Ensure it's above background elements */
-        max-height: 90vh; /* Prevent it from being too tall */
-        overflow-y: auto; /* Allow scrolling if upgrades exceed height */
-        text-align: left; /* Align text inside shop to left */
+        z-index: 100;
+        max-height: 90vh;
+        overflow-y: auto;
+        text-align: left;
     }
-
     #shopContainer h2 {
-        text-align: center;
-        margin-top: 0;
-        margin-bottom: 15px;
-        color: var(--grass-color-dark);
-        font-size: 1.4em;
+        text-align: center; margin-top: 0; margin-bottom: 15px;
+        color: var(--wood-color-dark); font-size: 1.4em;
     }
-
     .upgradeItem {
-        margin-bottom: 15px;
-        padding-bottom: 10px;
+        margin-bottom: 15px; padding-bottom: 10px;
         border-bottom: 1px dashed var(--shop-border);
     }
-    .upgradeItem:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-    }
-
-    .upgradeItem p {
-        margin: 5px 0;
-        font-size: 0.9em;
-    }
-    .upgradeItem .cost {
-        font-weight: bold;
-        color: var(--earth-color);
-    }
-    .upgradeItem .level {
-        font-style: italic;
-        color: #555;
-        font-size: 0.8em;
-    }
-
+    .upgradeItem:last-child { border-bottom: none; margin-bottom: 0; }
+    .upgradeItem p { margin: 5px 0; font-size: 0.9em; }
+    .upgradeItem .cost { font-weight: bold; color: var(--earth-color); }
+    .upgradeItem .level { font-style: italic; color: #555; font-size: 0.8em;}
     .buyButton {
-        display: block; /* Make button take full width */
-        width: 100%;
-        padding: 8px 10px;
-        background-color: var(--button-bg);
-        color: var(--button-text);
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background-color 0.2s ease;
-        margin-top: 5px;
-        font-size: 0.9em;
-        text-align: center;
+        display: block; width: 100%; padding: 8px 10px;
+        background-color: var(--button-bg); color: var(--button-text);
+        border: none; border-radius: 5px; cursor: pointer;
+        font-weight: bold; transition: background-color 0.2s ease;
+        margin-top: 5px; font-size: 0.9em; text-align: center;
     }
-    .buyButton:hover:not(:disabled) {
-        background-color: var(--button-hover-bg);
-    }
-    .buyButton:disabled {
-        background-color: var(--button-disabled-bg);
-        cursor: not-allowed;
-    }
+    .buyButton:hover:not(:disabled) { background-color: var(--button-hover-bg); }
+    .buyButton:disabled { background-color: var(--button-disabled-bg); cursor: not-allowed; }
 
-    /* Responsive Adjustments */
     @media (max-width: 900px) {
       body {
-        /* Removed extra bottom padding, adjusted right for shop */
-        padding: 15px 180px 15px 15px;
+        padding: 15px 200px 15px 15px;
       }
-       #gameContent {
-          max-width: 100%;
-       }
+      #logArea { height: 350px; max-width: 500px;}
       #shopContainer {
-          width: 150px;
-          right: 10px;
+          width: 170px;
           padding: 10px;
       }
-       #shopContainer h2 { font-size: 1.2em; }
-      .upgradeItem p { font-size: 0.85em; }
-      .buyButton { font-size: 0.85em; padding: 6px 8px;}
-
-        #grassArea {
-            height: 350px; /* Reduce height slightly */
-        }
     }
-     @media (max-width: 600px) { /* Add breakpoint for when shop needs to move */
+
+     @media (max-width: 600px) {
         body {
-            padding: 15px 15px 80px 15px; /* Add bottom padding again */
-            text-align: center; /* Re-center body text */
+            padding: 15px 15px 80px 15px;
         }
          #gameContent {
-             display: block; /* Let it take full width */
-             margin-bottom: 220px; /* Add space below game for shop */
+             margin-bottom: 220px;
          }
         #shopContainer {
-            position: fixed; /* Keep it fixed */
-            top: auto; /* Unset top */
-            bottom: 10px; /* Position at bottom */
-            left: 50%; /* Center horizontally */
-            right: auto; /* Unset right */
-            transform: translateX(-50%); /* Correct horizontal centering */
-            width: 90%; /* Make it wider */
-            max-width: 400px; /* But not too wide */
-            max-height: 180px; /* Limit height */
-            overflow-y: auto;
+            position: fixed;
+            top: auto;
+            bottom: 10px;
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            max-height: 180px;
         }
      }
+
      @media (max-width: 480px) {
          h1 { font-size: 2em; }
          #score { font-size: 1.5em; }
          #meterContainer { height: 30px; }
          #rewardMessage { font-size: 1.1em; }
+         #logArea { height: 250px; }
      }
-
   </style>
 </head>
 <body>
 
-  <!-- Main Content Area -->
   <div id="gameContent">
-    <h1>Touch Grass Simulator</h1>
+    <h1>Stick Making Simulator</h1>
     <p class="small-text">Contract: <span id="contractAddress">Loading...</span></p>
 
-    <div id="grassArea">
+    <div id="logArea">
+        <img id="logImage" src="log.png" alt="A log to make sticks from">
         <div id="particleContainer"></div>
     </div>
 
-    <p id="score">Touches: 0</p>
-
-    <div id="meterContainer">
-      <div id="meterFill"></div>
-    </div>
-
-    <div id="rewardMessage">Let the grounding begin...</div>
+    <p id="score">Sticks Made: 0</p>
+    <div id="meterContainer"><div id="meterFill"></div></div>
+    <div id="rewardMessage">Click the log to make some sticks!</div>
   </div>
 
-  <!-- Shop Container -->
   <div id="shopContainer">
-      <h2>Upgrades</h2>
-
+      <h2>Tool Shed</h2>
       <div class="upgradeItem" id="upgradeMultiplier">
-          <p>Better Grip:</p>
-          <p>+<span id="multiplierValue">1</span> Touch per Click</p>
+          <p>Sharper Axe:</p>
+          <p>+<span id="multiplierValue">1</span> Stick per Chop</p>
           <p class="level">Level: <span id="multiplierLevel">0</span></p>
-          <p class="cost">Cost: <span id="multiplierCost">25</span> Touches</p>
-          <button class="buyButton" id="buyMultiplier">Buy</button>
+          <p class="cost">Cost: <span id="multiplierCost">25</span> Sticks</p>
+          <button class="buyButton" id="buyMultiplier">Upgrade</button>
       </div>
-
       <div class="upgradeItem" id="upgradePassive">
-          <p>Auto-Toucher:</p>
-          <p>+<span id="passiveValue">1</span> Touch / sec</p>
+          <p>Automated Whittler:</p>
+          <p>+<span id="passiveValue">1</span> Stick / sec</p>
           <p class="level">Level: <span id="passiveLevel">0</span></p>
-          <p class="cost">Cost: <span id="passiveCost">100</span> Touches</p>
-          <button class="buyButton" id="buyPassive">Buy</button>
+          <p class="cost">Cost: <span id="passiveCost">100</span> Sticks</p>
+          <button class="buyButton" id="buyPassive">Build</button>
       </div>
-
-      <!-- Add more upgrades here if desired -->
-
   </div>
 
-  <!-- REMOVED PNL Button Container -->
-  <!-- REMOVED Hidden Canvas -->
+  <div id="levelUpMessage">LOG PROCESSED!</div>
 
-  <!-- Custom cursor element -->
-  <div id="customCursor"></div>
-
-  <!-- Level up overlay message -->
-  <div id="levelUpMessage">LEVEL UP!</div>
-
-  <!-- Audio elements -->
-  <audio id="clickSound" src="click_satisfying.mp3" preload="auto"></audio>
+  <audio id="chopSound" src="wood.mp3" preload="auto"></audio>
   <audio id="bgMusic" src="ambient_nature.mp3" preload="auto" loop></audio>
   <audio id="levelupSound" src="levelup_epic.mp3" preload="auto"></audio>
   <audio id="winSound" src="win_fanfare.mp3" preload="auto"></audio>
-  <audio id="buySound" src="buy_upgrade.mp3" preload="auto"></audio> <!-- Sound for buying -->
+  <audio id="buySound" src="buy_upgrade.mp3" preload="auto"></audio>
 
   <script>
-    // ---------------------------
     // Game State Variables
-    // ---------------------------
-    let totalClicks = 0;
-    let currentLevelClicks = 0;
+    let totalSticks = 0;
+    let currentLevelSticks = 0;
     let currentLevel = 1;
-    let currentLevelThreshold = 15;
-    const levelThresholdMultiplier = 2.5;
-    const maxClicksToWin = 10000; // Increased goal for upgrades
-    const particlesPerClick = 5;
-    const contractAddr = ""; // Store the address
+    let currentLevelThreshold = 20;
+    const levelThresholdMultiplier = 2.2;
+    const maxSticksToWin = 15000;
+    const woodChipsPerClick = 5;
+    const contractAddr = "";
 
-    // --- Upgrade State ---
-    let clicksPerTouch = 1; // How many 'Touches' each click gives
-    let passiveClicksPerSecond = 0;
-
+    // Upgrade State
+    let sticksPerClick = 1;
+    let passiveSticksPerSecond = 0;
     let multiplierLevel = 0;
     let multiplierBaseCost = 25;
-    let multiplierCostIncreaseFactor = 1.6; // Cost increases significantly
-
+    let multiplierCostIncreaseFactor = 1.65;
     let passiveLevel = 0;
     let passiveBaseCost = 100;
-    let passiveCostIncreaseFactor = 1.8;
+    let passiveCostIncreaseFactor = 1.85;
 
-    // ---------------------------
-    // Message List (Shortened for brevity, keep your full list)
-    // ---------------------------
     const combinedMessages = [
-        "nature is healing", "less charting, more chlorophyll.",
-        "is this what 'HODLing' feels like?", "feel the simulated dew.",
-        "this doesn't require KYC.", "mcdonalds isn't that bad...",
-        // ... Add your full list back here
+        "Nice chop!", "That's a clean cut!", "The wood chips fly!", "Making progress on this log.",
+        "Good stick produced.", "Whittle whittle!", "Another stick for the pile.", "This log is tough!",
+        "Sharp tools make easy work.", "Perfect for kindling.", "Smooth grain on this one.",
+        "Careful with that axe!", "Almost through this section.", "The sound of industry!", "From log to stick!"
     ];
     let messageIndex = 0;
     let messageLocked = false;
     let gameWon = false;
-    let passiveIncomeInterval = null; // To store the interval ID
+    let passiveIncomeInterval = null;
+    let spawnedSticksData = [];
 
-    // ---------------------------
-    // Get DOM Elements
-    // ---------------------------
-    const body           = document.body;
-    const grassArea      = document.getElementById("grassArea");
+    const body = document.body;
+    const logArea = document.getElementById("logArea");
+    const logImage = document.getElementById("logImage");
     const particleContainer = document.getElementById("particleContainer");
-    const scoreDisplay   = document.getElementById("score");
-    const meterFill      = document.getElementById("meterFill");
-    const rewardMessage  = document.getElementById("rewardMessage");
-    const customCursor   = document.getElementById("customCursor");
+    const scoreDisplay = document.getElementById("score");
+    const meterFill = document.getElementById("meterFill");
+    const rewardMessage = document.getElementById("rewardMessage");
     const levelUpMessage = document.getElementById("levelUpMessage");
     const contractAddressSpan = document.getElementById("contractAddress");
-
-    // Sound Elements
-    const clickSound   = document.getElementById("clickSound");
-    const bgMusic      = document.getElementById("bgMusic");
+    const chopSound = document.getElementById("chopSound");
+    const bgMusic = document.getElementById("bgMusic");
     const levelupSound = document.getElementById("levelupSound");
-    const winSound     = document.getElementById("winSound");
-    const buySound     = document.getElementById("buySound"); // Get buy sound element
-
-    // Shop Elements
-    const shopContainer = document.getElementById("shopContainer");
+    const winSound = document.getElementById("winSound");
+    const buySound = document.getElementById("buySound");
     const buyMultiplierButton = document.getElementById("buyMultiplier");
     const buyPassiveButton = document.getElementById("buyPassive");
     const multiplierCostDisplay = document.getElementById("multiplierCost");
     const multiplierLevelDisplay = document.getElementById("multiplierLevel");
-    const multiplierValueDisplay = document.getElementById("multiplierValue"); // To show current click value
+    const multiplierValueDisplay = document.getElementById("multiplierValue");
     const passiveCostDisplay = document.getElementById("passiveCost");
     const passiveLevelDisplay = document.getElementById("passiveLevel");
-    const passiveValueDisplay = document.getElementById("passiveValue"); // To show current passive value
+    const passiveValueDisplay = document.getElementById("passiveValue");
 
-    // REMOVED PNL Elements
-
-    // ---------------------------
-    // Mobile Detection & Setup
-    // ---------------------------
     const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-    if (isTouchDevice) {
-      customCursor.style.display = "none";
-    }
+    const STICK_SCALE_MULTIPLIER = 6; // UPDATED to 6
+    const STICK_GRAVITY = 0.3;
+    const STICK_BOUNCE_FACTOR = 0.5;
+    const STICK_FRICTION = 0.98;
 
-    // ---------------------------
-    // Utility Functions
-    // ---------------------------
-     function calculateCost(baseCost, level, increaseFactor) {
-        return Math.floor(baseCost * Math.pow(increaseFactor, level));
-     }
-
-    // ---------------------------
-    // Update UI Functions
-    // ---------------------------
-    function updateScoreDisplay() {
-      // Format large numbers nicely maybe? (Optional)
-      scoreDisplay.textContent = `Touches: ${Math.floor(totalClicks)}`;
-      // Update shop button states based on current score
-      updateShopButtons();
-    }
-
-    function updateMeter() {
-      const threshold = currentLevelThreshold || 1;
-      let fillPercentage = Math.min((currentLevelClicks / threshold) * 100, 100);
-      meterFill.style.width = fillPercentage + "%";
-    }
-
+    function calculateCost(baseCost, level, increaseFactor) { return Math.floor(baseCost * Math.pow(increaseFactor, level)); }
+    function updateScoreDisplay() { scoreDisplay.textContent = `Sticks Made: ${Math.floor(totalSticks)}`; updateShopButtons(); }
+    function updateMeter() { const threshold = currentLevelThreshold || 1; let fillPercentage = Math.min((currentLevelSticks / threshold) * 100, 100); meterFill.style.width = fillPercentage + "%"; }
     function updateShopUI() {
-        // Multiplier Upgrade
         const currentMultiplierCost = calculateCost(multiplierBaseCost, multiplierLevel, multiplierCostIncreaseFactor);
         multiplierCostDisplay.textContent = currentMultiplierCost;
         multiplierLevelDisplay.textContent = multiplierLevel;
-        multiplierValueDisplay.textContent = clicksPerTouch; // Show current value per click
-
-        // Passive Upgrade
+        multiplierValueDisplay.textContent = sticksPerClick;
         const currentPassiveCost = calculateCost(passiveBaseCost, passiveLevel, passiveCostIncreaseFactor);
         passiveCostDisplay.textContent = currentPassiveCost;
         passiveLevelDisplay.textContent = passiveLevel;
-        passiveValueDisplay.textContent = passiveClicksPerSecond; // Show current passive rate
-
-        updateShopButtons(); // Ensure buttons enable/disable correctly
+        passiveValueDisplay.textContent = passiveSticksPerSecond;
+        updateShopButtons();
     }
-
     function updateShopButtons() {
-        // Disable buttons if player can't afford
         const currentMultiplierCost = calculateCost(multiplierBaseCost, multiplierLevel, multiplierCostIncreaseFactor);
-        buyMultiplierButton.disabled = totalClicks < currentMultiplierCost;
-
+        buyMultiplierButton.disabled = totalSticks < currentMultiplierCost;
         const currentPassiveCost = calculateCost(passiveBaseCost, passiveLevel, passiveCostIncreaseFactor);
-        buyPassiveButton.disabled = totalClicks < currentPassiveCost;
+        buyPassiveButton.disabled = totalSticks < currentPassiveCost;
     }
-
-
-    // ---------------------------
-    // Show Next Message
-    // ---------------------------
     function showNextMessage() {
       if (messageLocked || gameWon) return;
       messageIndex = (messageIndex + 1) % combinedMessages.length;
       rewardMessage.textContent = combinedMessages[messageIndex];
       messageLocked = true;
-      setTimeout(() => { messageLocked = false; }, 3000);
+      setTimeout(() => { messageLocked = false; }, 2500);
     }
-
-    // ---------------------------
-    // Create Particle Effect
-    // ---------------------------
-    function createParticles(x, y) {
-        const rect = grassArea.getBoundingClientRect();
+    function createWoodChipParticles(x, y) {
+        const rect = logArea.getBoundingClientRect();
         const relativeX = x - rect.left;
         const relativeY = y - rect.top;
-
-        for (let i = 0; i < particlesPerClick; i++) {
+        for (let i = 0; i < woodChipsPerClick; i++) {
             const particle = document.createElement('div');
             particle.classList.add('particle');
             particleContainer.appendChild(particle);
-
             const startX = relativeX; const startY = relativeY;
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 50 + 30;
-            const gravity = 0.5; const life = Math.random() * 0.5 + 0.5;
-            let vx = Math.cos(angle) * speed / 10;
-            let vy = Math.sin(angle) * speed / 10 - 3;
+            const speed = Math.random() * 60 + 40;
+            const gravity = 0.6; const life = Math.random() * 0.6 + 0.4;
+            let vx = Math.cos(angle) * speed / 12;
+            let vy = Math.sin(angle) * speed / 12 - (Math.random() * 2 + 3);
             let posX = startX; let posY = startY;
             let startTime = performance.now();
-
             function animateParticle() {
                 const elapsed = (performance.now() - startTime) / 1000;
                 if (elapsed > life) { particle.remove(); return; }
                 vy += gravity; posX += vx; posY += vy;
-                particle.style.left = `${posX}px`; particle.style.top = `${posY}px`;
-                particle.style.opacity = 1 - (elapsed / life);
+                particle.style.transform = `translate(${posX - startX}px, ${posY - startY}px) rotate(${angle*elapsed*100}deg)`;
+                particle.style.left = `${startX}px`;
+                particle.style.top = `${startY}px`;
+                particle.style.opacity = Math.max(0, 1 - (elapsed / life) * 1.5);
                 requestAnimationFrame(animateParticle);
             }
             requestAnimationFrame(animateParticle);
         }
     }
 
-    // ---------------------------
-    // Level Up / Win Functions
-    // ---------------------------
-    function checkLevelUpOrWin() {
-        if (gameWon) return; // Don't process if already won
+    function spawnMovingStick(clickX, clickY) {
+        const logRect = logArea.getBoundingClientRect();
+        const originX = clickX - logRect.left;
+        const originY = clickY - logRect.top;
+        const stickImg = document.createElement('img');
+        stickImg.src = 'sticks.png';
+        stickImg.classList.add('accumulatedStick');
+        const baseStickStyle = getComputedStyle(stickImg);
+        const baseWidth = parseInt(baseStickStyle.width) || 60;
+        const baseHeight = parseInt(baseStickStyle.height) || 15;
+        stickImg.style.width = `${baseWidth * STICK_SCALE_MULTIPLIER}px`;
+        stickImg.style.height = `${baseHeight * STICK_SCALE_MULTIPLIER}px`;
+        const actualWidth = baseWidth * STICK_SCALE_MULTIPLIER;
+        const actualHeight = baseHeight * STICK_SCALE_MULTIPLIER;
+        let posX = originX - actualWidth / 2;
+        let posY = originY - actualHeight / 2;
 
-        if (totalClicks >= maxClicksToWin) {
+        // CORRECTED Initial velocity: pop outwards and upwards with spread
+        const baseUpAngle = -Math.PI / 2; // -90 degrees (straight up)
+        const spreadAmount = Math.PI * (2/3); // Allows for a 120-degree spread
+        const popAngle = baseUpAngle + (Math.random() - 0.5) * spreadAmount; // Angle from approx -150 deg to -30 deg
+
+        const popSpeed = Math.random() * 5 + 7; // Adjust speed
+        let vx = Math.cos(popAngle) * popSpeed; // Will now give positive and negative vx
+        let vy = Math.sin(popAngle) * popSpeed; // Mostly negative (upwards for these angles)
+
+        let rotation = (Math.random() - 0.5) * 90;
+        let angularVelocity = (Math.random() - 0.5) * 10;
+        stickImg.style.transform = `translate(${posX}px, ${posY}px) rotate(${rotation}deg)`;
+        stickImg.style.opacity = '1';
+        stickImg.style.zIndex = 2;
+        particleContainer.appendChild(stickImg);
+        const stickData = { element: stickImg, x: posX, y: posY, vx: vx, vy: vy, rotation: rotation, angularVelocity: angularVelocity, onGround: false };
+        spawnedSticksData.push(stickData);
+    }
+
+    function updateMovingSticks() {
+        if (gameWon) return;
+        const floorY = logArea.clientHeight;
+        spawnedSticksData.forEach(stick => {
+            if (stick.landedCompletely) return;
+            stick.vy += STICK_GRAVITY;
+            stick.x += stick.vx;
+            stick.y += stick.vy;
+            stick.rotation += stick.angularVelocity;
+            const actualWidth = stick.element.offsetWidth;
+            const actualHeight = stick.element.offsetHeight;
+            if (stick.y + actualHeight > floorY) {
+                stick.y = floorY - actualHeight;
+                stick.vy *= -STICK_BOUNCE_FACTOR;
+                stick.vx *= STICK_FRICTION;
+                stick.angularVelocity *= 0.8;
+                if (Math.abs(stick.vy) < 0.5) { stick.vy = 0; stick.angularVelocity = 0; }
+            }
+            if (stick.x < 0) { stick.x = 0; stick.vx *= -STICK_BOUNCE_FACTOR * 0.5; }
+            else if (stick.x + actualWidth > logArea.clientWidth) { stick.x = logArea.clientWidth - actualWidth; stick.vx *= -STICK_BOUNCE_FACTOR * 0.5; }
+            stick.element.style.transform = `translate(${stick.x}px, ${stick.y}px) rotate(${stick.rotation}deg)`;
+        });
+        requestAnimationFrame(updateMovingSticks);
+    }
+    requestAnimationFrame(updateMovingSticks);
+
+    function checkLevelUpOrWin() {
+        if (gameWon) return;
+        if (totalSticks >= maxSticksToWin) {
              winGame();
-        }
-        else if (currentLevelClicks >= currentLevelThreshold) {
+        } else if (currentLevelSticks >= currentLevelThreshold) {
              levelUp();
         }
     }
 
     function levelUp() {
-      body.classList.add('flash');
-      setTimeout(() => body.classList.remove('flash'), 600);
-      grassArea.classList.add('shake');
-      setTimeout(() => grassArea.classList.remove('shake'), 500);
-
-      levelupSound.currentTime = 0;
-      levelupSound.play().catch(err => console.log("Level up sound error:", err));
-
-      levelUpMessage.textContent = `Level ${currentLevel + 1}!`;
-      levelUpMessage.classList.add("show");
-      setTimeout(() => levelUpMessage.classList.remove("show"), 2000);
-
-      currentLevel++;
-      // IMPORTANT: Reset meter correctly even with passive income
-      // Subtract the threshold amount from the current clicks
-      currentLevelClicks -= currentLevelThreshold;
-      // Ensure it doesn't go below zero if passive income pushed it over by a lot between checks
-      currentLevelClicks = Math.max(0, currentLevelClicks);
-
-      currentLevelThreshold = Math.min(Math.floor(currentLevelThreshold * levelThresholdMultiplier), maxClicksToWin);
-
-      updateMeter();
-      updateScoreDisplay(); // Update score in case formatting changes with level
-
-       messageLocked = false;
-       messageIndex = Math.floor(Math.random() * combinedMessages.length);
-       showNextMessage();
-
-       // Check again in case leveling up immediately triggers another level
-       checkLevelUpOrWin();
+        body.classList.add('flash'); setTimeout(() => body.classList.remove('flash'), 600);
+        logArea.classList.add('shake'); setTimeout(() => logArea.classList.remove('shake'), 400);
+        levelupSound.currentTime = 0; levelupSound.play().catch(err => console.log("Level up sound error:", err));
+        levelUpMessage.textContent = `LOG ${currentLevel} PROCESSED!`; levelUpMessage.classList.add("show");
+        setTimeout(() => levelUpMessage.classList.remove("show"), 2000);
+        spawnedSticksData.forEach(stickData => stickData.element.remove()); spawnedSticksData = [];
+        currentLevel++; currentLevelSticks -= currentLevelThreshold; currentLevelSticks = Math.max(0, currentLevelSticks);
+        currentLevelThreshold = Math.min(Math.floor(currentLevelThreshold * levelThresholdMultiplier), maxSticksToWin);
+        updateMeter(); updateScoreDisplay(); messageLocked = false;
+        messageIndex = Math.floor(Math.random() * combinedMessages.length); showNextMessage(); checkLevelUpOrWin();
     }
 
     function winGame() {
-        if (gameWon) return;
-        gameWon = true;
-
-        // Stop passive income interval
-        if (passiveIncomeInterval) {
-            clearInterval(passiveIncomeInterval);
-            passiveIncomeInterval = null;
-        }
-
-        body.classList.add('flash');
-        setTimeout(() => body.classList.remove('flash'), 1000);
-
-        winSound.currentTime = 0;
-        winSound.play().catch(err => console.log("Win sound error:", err));
+        if (gameWon) return; gameWon = true;
+        if (passiveIncomeInterval) { clearInterval(passiveIncomeInterval); passiveIncomeInterval = null; }
+        body.classList.add('flash'); setTimeout(() => body.classList.remove('flash'), 1000);
+        winSound.currentTime = 0; winSound.play().catch(err => console.log("Win sound error:", err));
         if (!bgMusic.paused) {
-            // Fade out music
              let vol = bgMusic.volume;
              const fadeOutInterval = setInterval(() => {
-                vol -= 0.1;
-                if (vol <= 0) {
-                    bgMusic.pause(); bgMusic.volume = 1;
-                    clearInterval(fadeOutInterval);
-                } else { bgMusic.volume = vol; }
+                vol -= 0.1; if (vol <= 0) { bgMusic.pause(); bgMusic.volume = 1; clearInterval(fadeOutInterval); }
+                else { bgMusic.volume = vol; }
              }, 100);
         }
-
-        levelUpMessage.style.fontSize = "3.5em";
-        levelUpMessage.style.color = "#FFD700";
-        levelUpMessage.textContent = "You Touched Enough Grass!";
-        levelUpMessage.classList.add("show");
-
-        rewardMessage.textContent = "True Zen Achieved. Go outside for real now?";
-
-        grassArea.removeEventListener(isTouchDevice ? "touchstart" : "mousedown", handleInteractionStart);
-        grassArea.removeEventListener(isTouchDevice ? "touchend" : "click", handleInteractionEnd);
-        grassArea.style.cursor = 'default';
-        if (!isTouchDevice) customCursor.style.display = 'none';
-
-        // Disable shop buttons permanently
-        buyMultiplierButton.disabled = true;
-        buyPassiveButton.disabled = true;
+        levelUpMessage.style.fontSize = "3.5em"; levelUpMessage.style.color = "var(--wood-color-dark)";
+        levelUpMessage.textContent = "Master Stick Maker!"; levelUpMessage.classList.add("show");
+        rewardMessage.textContent = "Your wood pile is legendary! Time for a bigger forest?";
+        logArea.removeEventListener(isTouchDevice ? "touchstart" : "mousedown", handleInteractionStart);
+        logArea.removeEventListener(isTouchDevice ? "touchend" : "click", handleInteractionEnd);
+        logArea.style.cursor = 'default';
+        buyMultiplierButton.disabled = true; buyPassiveButton.disabled = true;
+        spawnedSticksData.forEach(stickData => stickData.element.remove()); spawnedSticksData = [];
     }
 
-    // ---------------------------
-    // Interaction Handlers
-    // ---------------------------
     function handleInteractionStart(e) {
-       if (gameWon) return;
-       if (bgMusic.paused && bgMusic.readyState >= 3) {
-           bgMusic.play().catch(err => console.log("Error starting background music:", err));
-       }
-       const touch = isTouchDevice ? e.changedTouches[0] : e;
-       const rect = grassArea.getBoundingClientRect();
+       if (gameWon) return; if (bgMusic.paused && bgMusic.readyState >= 3) { bgMusic.play().catch(err => console.log("Error starting background music:", err));}
+       const touch = isTouchDevice ? e.changedTouches[0] : e; const rect = logArea.getBoundingClientRect();
        const x = touch.clientX - rect.left; const y = touch.clientY - rect.top;
-       grassArea.style.setProperty('--click-x', `${x}px`);
-       grassArea.style.setProperty('--click-y', `${y}px`);
-       grassArea.classList.add('ripple');
-       setTimeout(() => grassArea.classList.remove('ripple'), 500);
+       logArea.style.setProperty('--click-x', `${x}px`); logArea.style.setProperty('--click-y', `${y}px`);
+       logArea.classList.add('ripple'); setTimeout(() => logArea.classList.remove('ripple'), 300);
     }
 
     function handleInteractionEnd(e) {
-      if (gameWon) return;
-      e.preventDefault();
-
-      // Apply multiplier
-      const clicksToAdd = clicksPerTouch;
-      totalClicks += clicksToAdd;
-      currentLevelClicks += clicksToAdd;
-
-      updateScoreDisplay();
-      updateMeter();
-
-      clickSound.currentTime = 0;
-      clickSound.play().catch(err => console.log("Click sound error:", err));
-
+      if (gameWon) return; e.preventDefault();
+      const sticksToAddThisClick = sticksPerClick; totalSticks += sticksToAddThisClick; currentLevelSticks += sticksToAddThisClick;
+      updateScoreDisplay(); updateMeter(); chopSound.currentTime = 0;
+      chopSound.play().catch(err => console.log("Chop sound error:", err));
       const touch = isTouchDevice ? e.changedTouches[0] : e;
-      createParticles(touch.clientX, touch.clientY);
-
-      showNextMessage();
-      checkLevelUpOrWin(); // Check after click
+      for (let i = 0; i < sticksToAddThisClick; i++) { spawnMovingStick(touch.clientX, touch.clientY); }
+      createWoodChipParticles(touch.clientX, touch.clientY); showNextMessage(); checkLevelUpOrWin();
     }
 
-    // ---------------------------
-    // Shop Purchase Logic
-    // ---------------------------
     function buyUpgrade(type) {
-        if (gameWon) return;
-        let cost = 0;
-        let canAfford = false;
-
+        if (gameWon) return; let cost = 0; let canAfford = false;
         if (type === 'multiplier') {
             cost = calculateCost(multiplierBaseCost, multiplierLevel, multiplierCostIncreaseFactor);
-            if (totalClicks >= cost) {
-                totalClicks -= cost;
-                multiplierLevel++;
-                clicksPerTouch++; // Simple increase by 1 each time
-                canAfford = true;
-            }
+            if (totalSticks >= cost) { totalSticks -= cost; multiplierLevel++; sticksPerClick++; canAfford = true; }
         } else if (type === 'passive') {
             cost = calculateCost(passiveBaseCost, passiveLevel, passiveCostIncreaseFactor);
-             if (totalClicks >= cost) {
-                totalClicks -= cost;
-                passiveLevel++;
-                passiveClicksPerSecond++; // Simple increase by 1 each time
-                canAfford = true;
-                // Start or update passive income interval
-                startPassiveIncome();
-            }
+            if (totalSticks >= cost) { totalSticks -= cost; passiveLevel++; passiveSticksPerSecond++; canAfford = true; startPassiveIncome(); }
         }
-
         if (canAfford) {
-            buySound.currentTime = 0;
-            buySound.play().catch(err => console.log("Buy sound error:", err));
-            updateScoreDisplay();
-            updateShopUI();
-            // Check if purchase causes level up/win (unlikely but possible)
-            checkLevelUpOrWin();
+            buySound.currentTime = 0; buySound.play().catch(err => console.log("Buy sound error:", err));
+            updateScoreDisplay(); updateShopUI(); checkLevelUpOrWin();
         }
     }
 
-    // ---------------------------
-    // Passive Income Logic
-    // ---------------------------
     function startPassiveIncome() {
-        if (passiveIncomeInterval) {
-            clearInterval(passiveIncomeInterval); // Clear existing interval if upgrading
-        }
-        if (passiveClicksPerSecond > 0 && !gameWon) {
+        if (passiveIncomeInterval) { clearInterval(passiveIncomeInterval); }
+        if (passiveSticksPerSecond > 0 && !gameWon) {
             passiveIncomeInterval = setInterval(() => {
-                if (gameWon) { // Double check in case game ends while interval is running
-                     clearInterval(passiveIncomeInterval);
-                     passiveIncomeInterval = null;
-                     return;
+                if (gameWon) { clearInterval(passiveIncomeInterval); passiveIncomeInterval = null; return; }
+                const sticksToAddPassively = passiveSticksPerSecond; totalSticks += sticksToAddPassively; currentLevelSticks += sticksToAddPassively;
+                for (let i = 0; i < sticksToAddPassively; i++) {
+                    const randomX = logArea.getBoundingClientRect().left + (logArea.clientWidth / 2) + (Math.random() - 0.5) * 50;
+                    const randomY = logArea.getBoundingClientRect().top + (logArea.clientHeight / 3) + (Math.random() - 0.5) * 50;
+                    spawnMovingStick(randomX, randomY);
                 }
-                const clicksToAdd = passiveClicksPerSecond; // Add per second
-                totalClicks += clicksToAdd;
-                currentLevelClicks += clicksToAdd;
-                updateScoreDisplay();
-                updateMeter();
-                checkLevelUpOrWin(); // Check if passive income triggers level up/win
-            }, 1000); // Run every second
+                updateScoreDisplay(); updateMeter(); checkLevelUpOrWin();
+            }, 1000);
         }
     }
 
-    // ---------------------------
-    // REMOVED PNL / Highscore Card Logic
-    // ---------------------------
-
-
-    // ---------------------------
-    // Event Listeners
-    // ---------------------------
-    grassArea.addEventListener(isTouchDevice ? "touchstart" : "mousedown", handleInteractionStart, { passive: false });
-    grassArea.addEventListener(isTouchDevice ? "touchend" : "click", handleInteractionEnd);
-
-    if (!isTouchDevice) {
-        grassArea.addEventListener("mousemove", (e) => {
-            if (gameWon) return;
-            customCursor.style.left = e.clientX + "px";
-            customCursor.style.top  = e.clientY + "px";
-        });
-        grassArea.addEventListener("mouseleave", () => { if (!gameWon) customCursor.style.display = "none"; });
-        grassArea.addEventListener("mouseenter", () => { if (!gameWon) customCursor.style.display = "block"; });
-    }
-
-    // Shop Listeners
+    logArea.addEventListener(isTouchDevice ? "touchstart" : "mousedown", handleInteractionStart, { passive: false });
+    logArea.addEventListener(isTouchDevice ? "touchend" : "click", handleInteractionEnd);
     buyMultiplierButton.addEventListener('click', () => buyUpgrade('multiplier'));
     buyPassiveButton.addEventListener('click', () => buyUpgrade('passive'));
-
-    // REMOVED PNL Button Listener
-
-
-    // ---------------------------
-    // Auto-Cycle Messages (Less Frequent if needed)
-    // ---------------------------
-    setInterval(() => {
-      if (!messageLocked && !gameWon) {
-        showNextMessage();
-      }
-    }, 7000); // Slightly longer interval
-
-    // ---------------------------
-    // Initial Setup
-    // ---------------------------
-    contractAddressSpan.textContent = contractAddr || "N/A"; // Show N/A if empty
-    updateScoreDisplay();
-    updateMeter();
-    updateShopUI(); // Initialize shop display
-    startPassiveIncome(); // Start passive income if loaded with > 0 (e.g., from save state later)
+    setInterval(() => { if (!messageLocked && !gameWon) { showNextMessage(); }}, 6000);
+    contractAddressSpan.textContent = contractAddr || "N/A";
+    updateScoreDisplay(); updateMeter(); updateShopUI(); startPassiveIncome();
     messageIndex = Math.floor(Math.random() * combinedMessages.length);
     setTimeout(showNextMessage, 500);
-
+    if (isTouchDevice) { logArea.style.cursor = 'pointer'; }
   </script>
 </body>
 </html>
